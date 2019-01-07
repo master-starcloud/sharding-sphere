@@ -6,6 +6,14 @@ ID:
     (BQ_?[a-zA-Z_$][a-zA-Z0-9_$]* BQ_? DOT)? (BQ_?[a-zA-Z_$][a-zA-Z0-9_$]* BQ_?)
     ;
     
+BLOCK_COMMENT
+    : SLASH ASTERISK .*? ASTERISK SLASH -> channel(HIDDEN)
+    ;
+    
+SL_COMMENT
+    : MINUS MINUS ~[\r\n]* -> channel(HIDDEN)
+    ;
+    
 schemaName
     : ID
     ;
@@ -144,7 +152,7 @@ matchNone
     ;
     
 ids
-    : ID (COMMA  ID)*
+    : ID (COMMA ID)*
     ;
     
 idList
@@ -152,12 +160,12 @@ idList
     ;
     
 rangeClause
-    : rangeItem (COMMA  rangeItem)* | rangeItem OFFSET rangeItem
+    : rangeItem (COMMA rangeItem)* | rangeItem OFFSET rangeItem
     ;
     
 rangeItem
     : number | question
-    ;    
+    ;
     
 schemaNames
     : schemaName (COMMA schemaName)*
@@ -171,7 +179,7 @@ domainNames
     : domainName (COMMA domainName)*
     ;
     
-tableNamesWithParen
+tableList
     : LP_ tableNames RP_
     ;
     
@@ -296,8 +304,8 @@ bitExpr
     | bitExpr MOD bitExpr
     | bitExpr MOD_ bitExpr
     | bitExpr BIT_EXCLUSIVE_OR bitExpr
-    //| bitExpr '+' interval_expr
-    //| bitExpr '-' interval_expr
+    | bitExpr PLUS intervalExpr
+    | bitExpr MINUS intervalExpr
     | simpleExpr
     ;
     
@@ -307,7 +315,7 @@ simpleExpr
     | columnName
     | simpleExpr collateClause
     //| param_marker
-    //| variable
+    | variable
     | simpleExpr AND_ simpleExpr
     | PLUS simpleExpr
     | MINUS simpleExpr
@@ -326,7 +334,11 @@ simpleExpr
     ;
     
 functionCall
-    : ID LP_ bitExprs? RP_
+    : ID LP_ distinct? (exprs | ASTERISK)? RP_
+    ;
+    
+distinct
+    : DISTINCT
     ;
     
 intervalExpr
@@ -341,6 +353,10 @@ privateExprOfDb
     : matchNone
     ;
     
+variable
+    : matchNone
+    ;
+    
 liter
     : question
     | number
@@ -350,8 +366,8 @@ liter
     | LBE_ ID STRING RBE_
     | HEX_DIGIT
     | string
-    | ID STRING  collateClause?
-    | (DATE | TIME |TIMESTAMP) STRING
+    | ID STRING collateClause?
+    | (DATE | TIME | TIMESTAMP) STRING
     | ID? BIT_NUM collateClause?
     ;
     
@@ -380,5 +396,5 @@ orderByClause
     ;
     
 orderByItem
-    : (columnName | number |expr) (ASC|DESC)?
+    : (columnName | number | expr) (ASC | DESC)?
     ;

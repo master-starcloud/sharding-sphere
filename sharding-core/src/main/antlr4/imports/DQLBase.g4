@@ -1,6 +1,6 @@
 grammar DQLBase;
 
-import BaseRule, Keyword, Symbol, DataType;
+import BaseRule, Keyword, MySQLKeyword, Symbol, DataType;
 
 unionSelect
     : selectExpression (UNION ALL? selectExpression)*
@@ -19,15 +19,15 @@ whereClause
     ;
     
 groupByClause 
-    : GROUP BY orderByItem (COMMA orderByItem)* (WITH ROLLUP)? havingClause?
+    : GROUP BY orderByItem (COMMA orderByItem)* (WITH ROLLUP)?
     ;
     
 havingClause
-    : HAVING  expr
+    : HAVING expr
     ;
     
-limitClause:
-    LIMIT rangeClause
+limitClause
+    : LIMIT rangeClause
     ;
     
 partitionClause 
@@ -35,9 +35,7 @@ partitionClause
     ;
     
 selectExprs
-    : selectExpr (COMMA selectExpr)*
-    | asterisk (COMMA selectExpr)*
-    | (selectExpr COMMA)+ asterisk (COMMA selectExpr)*
+    : (asterisk | selectExpr) (COMMA selectExpr)*
     ; 
     
 asterisk
@@ -50,8 +48,4 @@ selectExpr
     
 tableReferences
     : 
-    ;
-    
-functionCall
-    : (ID | DATE) LP_ bitExprs? RP_
     ;

@@ -21,12 +21,11 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import io.shardingsphere.core.parsing.lexer.token.DefaultKeyword;
 import io.shardingsphere.core.util.SQLUtil;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -34,32 +33,30 @@ import java.util.Set;
  *
  * @author panjuan
  */
+@RequiredArgsConstructor
 @Getter
-@EqualsAndHashCode
-@ToString
 public final class DistinctSelectItem implements SelectItem {
     
-    private final Set<String> distinctColumnNames = new HashSet<>();
+    private final Set<String> distinctColumnNames;
     
     private final Optional<String> alias;
     
-    public DistinctSelectItem(final Collection<String> distinctColumnNames, final Optional<String> alias) {
-        this.distinctColumnNames.addAll(distinctColumnNames);
-        this.alias = alias;
-    }
-
     @Override
     public String getExpression() {
-        
-        return distinctColumnNames.isEmpty() ? DefaultKeyword.DISTINCT.name() : SQLUtil.getExactlyValue(DefaultKeyword.DISTINCT + " " + Joiner.on(", ").join(distinctColumnNames));
+        return isSingleColumnWithAlias() ? SQLUtil.getExactlyValue(DefaultKeyword.DISTINCT.name() + " " + distinctColumnNames.iterator().next() + "AS" + alias.get()) 
+                : SQLUtil.getExactlyValue(DefaultKeyword.DISTINCT + " " + Joiner.on(", ").join(distinctColumnNames));
     }
     
     /**
-     * Get column label.
+     * Get distinct column labels.
      *
-     * @return column label
+     * @return distinct column labels
      */
-    public String getColumnLabel() {
-        return alias.isPresent() ? alias.get() : getExpression();
+    public Collection<String> getDistinctColumnLabels() {
+        return isSingleColumnWithAlias() ? Collections.singletonList(alias.get()) : distinctColumnNames;
+    }
+    
+    private boolean isSingleColumnWithAlias() {
+        return 1 == distinctColumnNames.size() && alias.isPresent();
     }
 }

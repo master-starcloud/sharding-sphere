@@ -21,10 +21,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelId;
-import io.netty.channel.EventLoopGroup;
 import io.shardingsphere.core.constant.properties.ShardingProperties;
-import io.shardingsphere.core.constant.properties.ShardingPropertiesConstant;
-import io.shardingsphere.core.constant.transaction.TransactionType;
 import io.shardingsphere.core.rule.Authentication;
 import io.shardingsphere.shardingproxy.runtime.GlobalRegistry;
 import io.shardingsphere.shardingproxy.transport.mysql.packet.generic.ErrPacket;
@@ -33,7 +30,6 @@ import io.shardingsphere.shardingproxy.transport.mysql.packet.handshake.Connecti
 import io.shardingsphere.shardingproxy.transport.mysql.packet.handshake.HandshakePacket;
 import lombok.SneakyThrows;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -53,18 +49,7 @@ public final class MySQLFrontendHandlerTest {
     private MySQLFrontendHandler mysqlFrontendHandler;
     
     @Mock
-    private EventLoopGroup eventLoopGroup;
-    
-    @Mock
     private ChannelHandlerContext context;
-    
-    @BeforeClass
-    @SneakyThrows
-    public static void beforeClass() {
-        Field field = GlobalRegistry.getInstance().getClass().getDeclaredField("shardingProperties");
-        field.setAccessible(true);
-        field.set(GlobalRegistry.getInstance(), new ShardingProperties(new Properties()));
-    }
     
     @Before
     @SneakyThrows
@@ -72,7 +57,7 @@ public final class MySQLFrontendHandlerTest {
         Field field = ConnectionIdGenerator.class.getDeclaredField("currentId");
         field.setAccessible(true);
         field.set(ConnectionIdGenerator.getInstance(), 0);
-        mysqlFrontendHandler = new MySQLFrontendHandler(eventLoopGroup);
+        mysqlFrontendHandler = new MySQLFrontendHandler();
     }
     
     @Test
@@ -125,12 +110,11 @@ public final class MySQLFrontendHandlerTest {
     private void setTransactionType() throws ReflectiveOperationException {
         Field field = GlobalRegistry.getInstance().getClass().getDeclaredField("shardingProperties");
         field.setAccessible(true);
-        field.set(GlobalRegistry.getInstance(), getShardingProperties(TransactionType.LOCAL));
+        field.set(GlobalRegistry.getInstance(), getShardingProperties());
     }
     
-    private ShardingProperties getShardingProperties(final TransactionType transactionType) {
+    private ShardingProperties getShardingProperties() {
         Properties props = new Properties();
-        props.setProperty(ShardingPropertiesConstant.PROXY_TRANSACTION_ENABLED.getKey(), String.valueOf(transactionType == TransactionType.XA));
         return new ShardingProperties(props);
     }
 }

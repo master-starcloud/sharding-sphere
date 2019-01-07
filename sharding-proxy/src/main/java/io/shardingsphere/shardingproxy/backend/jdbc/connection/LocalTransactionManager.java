@@ -17,7 +17,7 @@
 
 package io.shardingsphere.shardingproxy.backend.jdbc.connection;
 
-import io.shardingsphere.core.constant.transaction.TransactionOperationType;
+import io.shardingsphere.transaction.core.TransactionOperationType;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -79,7 +79,7 @@ public final class LocalTransactionManager implements TransactionManager {
         for (Connection each : connection.getCachedConnections().values()) {
             try {
                 each.commit();
-            } catch (SQLException ex) {
+            } catch (final SQLException ex) {
                 result.add(ex);
             }
         }
@@ -91,7 +91,7 @@ public final class LocalTransactionManager implements TransactionManager {
         for (Connection each : connection.getCachedConnections().values()) {
             try {
                 each.rollback();
-            } catch (SQLException ex) {
+            } catch (final SQLException ex) {
                 result.add(ex);
             }
         }

@@ -18,13 +18,9 @@
 package io.shardingsphere.shardingproxy.backend.jdbc.datasource;
 
 import io.shardingsphere.core.constant.ConnectionMode;
-import io.shardingsphere.core.constant.properties.ShardingProperties;
-import io.shardingsphere.core.exception.ShardingException;
-import io.shardingsphere.shardingproxy.runtime.GlobalRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.sql.DataSource;
@@ -35,7 +31,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,7 +38,6 @@ import java.util.concurrent.Future;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -51,18 +45,6 @@ import static org.junit.Assert.assertTrue;
 public class JDBCBackendDataSourceTest {
     
     private JDBCBackendDataSource jdbcBackendDataSource = new JDBCBackendDataSource();
-    
-    @BeforeClass
-    public static void beforeClass() {
-        initGlobalRegistry();
-    }
-    
-    @SneakyThrows
-    private static void initGlobalRegistry() {
-        Field field = GlobalRegistry.getInstance().getClass().getDeclaredField("shardingProperties");
-        field.setAccessible(true);
-        field.set(GlobalRegistry.getInstance(), new ShardingProperties(new Properties()));
-    }
     
     @Before
     public void setUp() {
@@ -96,13 +78,9 @@ public class JDBCBackendDataSourceTest {
         assertEquals(5, actual.size());
     }
     
-    @Test
+    @Test(expected = SQLException.class)
     public void assertGetConnectionsFailed() throws SQLException {
-        try {
-            jdbcBackendDataSource.getConnections(ConnectionMode.MEMORY_STRICTLY, "ds_1", 6);
-        } catch (ShardingException ex) {
-            assertThat(ex.getMessage(), is("Could't get 6 connections one time, partition succeed connection(5) have released!"));
-        }
+        jdbcBackendDataSource.getConnections(ConnectionMode.MEMORY_STRICTLY, "ds_1", 6);
     }
     
     @Test
@@ -116,9 +94,7 @@ public class JDBCBackendDataSourceTest {
         for (Future<List<Connection>> each : futures) {
             try {
                 actual.addAll(each.get());
-                // CHECKSTYLE:OFF
-            } catch (Exception ex) {
-                // CHECKSTYLE:ON
+            } catch (final Exception ex) {
                 assertThat(ex.getMessage(), containsString("Could't get 6 connections one time, partition succeed connection(5) have released!"));
             }
         }
